@@ -10,10 +10,17 @@ import com.google.gson.Gson
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import java.net.URL
 import kotlin.math.roundToInt
+import com.sun.xml.internal.ws.streaming.XMLStreamReaderUtil.close
+import jdk.nashorn.internal.runtime.ScriptingFunctions.readLine
+import java.io.InputStreamReader
+import java.io.BufferedReader
 
 
-fun main(vararg arg:String) {
+
+/***
+fun main3(vararg arg:String) {
     var path1url = "https://rosreestr.ru/wps/portal/p/cc_ib_portal_services/online_request/!ut/p/z1/pVE9TsMwFD4LA7PtNKV0tNqqoCJKf4AmS-S4VuoqcSLHBrEhwYEqZuAM6Y2w40BYWgYsL-_5-3vPIAQrEArywBOieC5IauogPIvGM3-EBj6ajGeoB_ElnqAOGkO47IL7o4ApAuF_-AZg-fDAwdDww6MWA-8PgI34l0lgQvYiiC4wwr43mQ6XfYjnHXh3de15ECKwsBo0F0rmacokCE7hghFJN5jaRdrXsq4j9VQwEODhcD5a1KxY83TNRWJMrAZZR0JnrpAsseTgF504vUBJzeq2jreMKofZ5Lo04qgeuVREqqjIS-4Y3b7rSsYMfP-6f9k_V-_VrvqoPqu3atcaRnxtRfo-7LoNOH-lUpYx0Xjl8bYNygTVWSyJoCwyGg0irUeJ7Tpa62YBpqhlJU82quU043wn-PmDhq-p0pI5KCnMfE2eIrtdQX6TZeedw_cRn3wBQc_CpQ!!/p0/IZ7_01HA1A42KODT90AR30VLN22001=CZ6_GQ4E1C41KGQ170AIAK131G00T5=MEcontroller!QCPObjectDataController==/" +
             "?object_data_id=140_"
     val path2url = "&dbName=fir&region_key=140"
@@ -81,3 +88,51 @@ fun main(vararg arg:String) {
         it.println(Gson().toJson(resultHM))
     }
 }
+****/
+fun main(arg: Array<String>) {
+    println(getContentOfHTTPPage("https://rosreestr.ru/site/"))
+}
+
+fun getContentOfHTTPPage(pageAddress: String, codePage: String = "UTF-8"): String {
+    val sb = StringBuilder()
+    val uc = URL(pageAddress).openConnection()
+    val br = BufferedReader( InputStreamReader( uc.getInputStream(), codePage) )
+    BufferedReader( InputStreamReader( uc.getInputStream(), codePage) ).use {
+        var inputLine: String?
+        do {
+            inputLine = br.readLine()
+            sb.append(inputLine)
+        } while( inputLine!= null )
+    }
+    return sb.toString()
+}
+
+fun getHttpJob(iterURL: Iterable<URL>) {
+    val jobs = mutableListOf<Job>()
+    val resultHM = hashMapOf<URL, String>()
+    val l: Lock = ReentrantLock()
+
+    iterURL.forEach {
+        val job = launch {
+            var resultGetHttp = ""
+            var count = 1
+            loop@ while (count < 5) {
+                try {
+                    resultGetHttp = getContentOfHTTPPage(it.toString())
+                    break@loop
+                } catch (e: Exception) {
+                    delay(1000)
+                }
+                count++
+            }
+            l.withLock { resultHM[it] = resultGetHttp }
+        }
+
+        jobs.add(job)
+    }
+
+    runBlocking {
+        jobs.forEach { it.join() }
+    }
+}
+
