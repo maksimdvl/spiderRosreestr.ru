@@ -1,19 +1,11 @@
 package com.github.maksimdvl.spiderhttpRR
 
-import java.io.PrintWriter
 import kotlin.concurrent.withLock
 import java.util.concurrent.locks.*
 import kotlinx.coroutines.experimental.*
 import com.github.kittinunf.fuel.Fuel
 import awaitString
-import com.google.gson.Gson
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
 import java.net.URL
-import kotlin.math.roundToInt
-import com.sun.xml.internal.ws.streaming.XMLStreamReaderUtil.close
-import jdk.nashorn.internal.runtime.ScriptingFunctions.readLine
 import java.io.InputStreamReader
 import java.io.BufferedReader
 
