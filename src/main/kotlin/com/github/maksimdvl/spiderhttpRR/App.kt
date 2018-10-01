@@ -90,7 +90,8 @@ fun main3(vararg arg:String) {
 }
 ****/
 fun main(arg: Array<String>) {
-    println(getContentOfHTTPPage("https://rosreestr.ru/site/"))
+    val l = listOf(URL("https://rosreestr.ru/site/"), URL("https://rosreestr.ru/wps/portal/online_request"))
+    println(getHttpJob(l))
 }
 
 fun getContentOfHTTPPage(pageAddress: String, codePage: String = "UTF-8"): String {
@@ -107,7 +108,7 @@ fun getContentOfHTTPPage(pageAddress: String, codePage: String = "UTF-8"): Strin
     return sb.toString()
 }
 
-fun getHttpJob(iterURL: Iterable<URL>) {
+fun getHttpJob(iterURL: Iterable<URL>): HashMap<URL, String> {
     val jobs = mutableListOf<Job>()
     val resultHM = hashMapOf<URL, String>()
     val l: Lock = ReentrantLock()
@@ -118,7 +119,7 @@ fun getHttpJob(iterURL: Iterable<URL>) {
             var count = 1
             loop@ while (count < 5) {
                 try {
-                    resultGetHttp = getContentOfHTTPPage(it.toString())
+                    resultGetHttp = Fuel.get(it.toString()).awaitString()
                     break@loop
                 } catch (e: Exception) {
                     delay(1000)
@@ -134,5 +135,6 @@ fun getHttpJob(iterURL: Iterable<URL>) {
     runBlocking {
         jobs.forEach { it.join() }
     }
+    return resultHM
 }
 
