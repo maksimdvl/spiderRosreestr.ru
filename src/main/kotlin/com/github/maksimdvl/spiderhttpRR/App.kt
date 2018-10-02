@@ -1,17 +1,17 @@
 package com.github.maksimdvl.spiderhttpRR
 
-import kotlin.concurrent.withLock
-import java.util.concurrent.locks.*
 import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.sync.*
 import com.github.kittinunf.fuel.Fuel
 import awaitString
 import java.net.URL
 import java.io.InputStreamReader
 import java.io.BufferedReader
+import java.io.IOException
 
 fun main(arg: Array<String>) {
     val l = listOf(URL("https://rosreestr.ru/site/"), URL("https://rosreestr.ru/wps/portal/online_request"))
-    println(getHttpJob(l))
+    println(jobsGetContentOf(l))
 }
 
 fun getContentOfHTTPPage(pageAddress: String, codePage: String = "UTF-8"): String {
@@ -28,25 +28,22 @@ fun getContentOfHTTPPage(pageAddress: String, codePage: String = "UTF-8"): Strin
     return sb.toString()
 }
 
-fun getHttpJob(iterURL: Iterable<URL>): HashMap<URL, String> {
+fun jobsGetContentOf(iterURL: Iterable<URL>): HashMap<URL, String> {
     val jobs = mutableListOf<Job>()
     val resultHM = hashMapOf<URL, String>()
-    val l: Lock = ReentrantLock()
+    val mutex = Mutex()
     runBlocking {
         iterURL.forEach {
             val job = launch {
-                var resultGetHttp = ""
-                var count = 1
-                loop@ while (count < 5) {
+                var resultGetHttp = "NOT RESULT GET REQUEST"
+                repeat (5) {
                     try {
-                        resultGetHttp = Fuel.get(it.toString()).awaitString()
-                        break@loop
-                    } catch (e: Exception) {
+                        if (resultGetHttp == "NOT RESULT GET REQUEST") resultGetHttp = Fuel.get(it.toString()).awaitString()
+                    } catch (e: IOException) {
                         delay(1000)
                     }
-                    count++
                 }
-                l.withLock { resultHM[it] = resultGetHttp }
+                mutex.withLock { resultHM[it] = resultGetHttp }
             }
 
             jobs.add(job)
@@ -57,6 +54,7 @@ fun getHttpJob(iterURL: Iterable<URL>): HashMap<URL, String> {
     }
     return resultHM
 }
+
 
 /***
 fun main3(vararg arg:String) {
