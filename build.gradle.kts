@@ -27,7 +27,7 @@ dependencies {
    // compile("com.beust", "klaxon", "2.0.11")
     compile("com.github.kittinunf.fuel" ,"fuel", "1.15.0")
     compile("com.github.kittinunf.fuel" ,"fuel-coroutines", "1.15.0")
-   // compile( "org.jsoup","jsoup", "1.11.3")
+    compile( "commons-io","commons-io", "2.6")
     testCompile("junit", "junit", "4.12")
 }
 
